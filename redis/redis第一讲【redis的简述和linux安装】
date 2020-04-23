@@ -1,0 +1,186 @@
+
+
+### Redis【一，Redis的简述和linux安装】
+
+[TOC]
+
+#### Redis（REmote DIctionary Server）:是什么
+
+redis（远程字典服务器），是完全开源免费的，高性能的k/v分布式内存数据，热门的Nosql数据库
+
+#### Redis可以干什么:
+
+- 内存存储和持久化：redis支持异步将内存中的数据写到硬盘上，同时不影响继续服务
+- 取最新N个数据的操作，如：可以将最新的10条评论的ID放在Redis的List集合里面
+- 模拟类似于HttpSession这种需要设定过期时间的功能
+- 发布、订阅消息系统
+- 定时器、计数器
+
+#### redis特点
+
+- 是完全开源免费的，高性能的k/v分布式内存数据库
+- 支持持久化的nosql数据库，将内存中的数据保持在磁盘中，重启后再次加载使用
+- 提供五种不同的数据存储结构（string，list，hash，set，zset）
+- 支持主从模式的数据备份
+
+##### 这里我们直接讲述linux下的安装和使用
+
+#### docker中的安装使用
+
+启动docker
+
+```shell
+sudo systemctl start docker
+```
+
+
+
+1、先从docker寻找redis 
+
+```shell
+docker search redis
+```
+
+![1567586583120](../pic/1567586583120.png)
+
+2、然后下载redis ，这里我们直接下载默认的第一个
+
+```shell
+docker pull redis
+```
+
+3、下载完成后我们先查看有没有我们的本地镜像库有没有
+
+```shell
+docker images
+```
+
+4、接下来我们开始运行redis
+
+- run :运行
+- --name ：后面的跟着是自定义名称
+- -p：第一个端口是宿主机端口，第二个端口是容器端口，表示将容器的6379端口映射到宿主机的6379端口上，这样可以通过访问宿主机6379来访问docker中的redis
+- -d：后台启动
+- redis:latest：启动那个redis 比较明确的启动
+
+```shell
+docker run --name redis6379 -p 6379:6379 -d redis:latest
+```
+
+4、启动成功后会返回一段字符串，这时候我们再去查看一下redis的运行状态
+
+```shell
+docker ps
+```
+
+5、我们在启动客户端对redis进行操作
+
+```shell
+docker exec -it redis6379 redis-cli
+```
+
+接下来我们再看不用docker怎么安装和使用redis
+
+#### linux下安装和使用redis
+
+1、我们根据官方的提示使用linux命令去下载redis（默认下载到你当前敲命令的目录位置）
+
+```shell
+wget http://download.redis.io/releases/redis-5.0.5.tar.gz
+```
+
+2、下载完成后我们需要将其解压
+
+```shell
+tar -zxvf redis-5.0.5
+```
+
+3、解压之后我们进入redis
+
+```shell
+cd redis
+```
+
+4、之后我们可以进行make命令
+
+```
+make
+```
+
+5、老夫掐指一算，在此处你会报如下错误
+
+![1567652039269](../pic/1567652039269.png)
+
+gcc没有找到，那我们得去先安装gcc （-y的意思就是 所有的是否确定都是 y 同意的）
+
+```shell
+yum install -y gcc
+```
+
+6、安装成功后再次make，如果报了一个致命错误！
+
+```shell
+zmalloc.h:50:31: 致命错误：jemalloc/jemalloc.h：没有那个文件或目录
+```
+
+恭喜你！ 这是因为我们第一次没有gcc的时候进行make所产生的问题，这个命令就是清除上次的make命令所产生的文件
+
+```shell
+make distclean
+```
+
+7、再次make，这次就成功了，这里肯定有人会说，你直接安装gcc在make不就可以了吗，为什么还要多此一举make好几次 还要make distclean；我这里呢，是本人安装踩过的坑，当你们遇到这个问题的时候要知道怎么去解决。
+
+8、make是编译，编译完成后我们需要将编译成功的可执行文件安装到系统目录中，一般为/usr/local/bin目录。
+
+```shell
+make install
+```
+
+9、在我们的/usr/local/bin目录下就可以看到如下的目录结构
+
+```shell
+redis-benchmark	 #性能测试工具
+redis-check-aof  #修复有问题的AOF文件
+redis-check-rdb  #修复有问题的dump.rdb文件
+redis-cli		 #客户端
+redis-sentinel -> redis-server	#redis集群使用
+redis-server	#Redis服务器启动命令
+
+```
+
+10、我们将我们的redis的配置文件copy一份出来
+
+```shell
+cp redis.conf  redis.conf_new
+```
+
+然后我们去修改redis.conf_new新配置文件中的参数，这个参数的意思就是启用守护进程，redis会在后台运行。
+
+```shell
+daemonize yes  #将daemonize  no改为 yes
+```
+
+11、启动服务端，在安装目录下启动
+
+```shell
+./redis-server /opt/redis-5.0.5/redis.conf_new #后面跟着是你要用那个配置文件启动
+ps -ef |grep redis #查看是否启动成功
+```
+
+12、启动客户端
+
+```shell
+redis-cli -p 6379 #可以指定端口，不指定默认6379
+```
+
+13、连接成功。
+
+下节课将会对五大数据结构和基本命令做下讲解
+
+后续的知识还请继续关注！
+
+
+
+
+
